@@ -5,7 +5,7 @@
  * Author:
  *       Dmitry Ponomarev (Aguacero) <demdxx@gmail.com>
  * 
- * Copyright (c) 2011 Dmitry Ponomarev V.}
+ * Copyright (c) 2011 Dmitry Ponomarev V.
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
