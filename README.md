@@ -1,6 +1,11 @@
 Simple C++ cmdline parser
 =========================
 
+## Ver 0.1
++ Command line arguments
++ Param default values
++ Param type => flags
+
 ## Ver 0.0
 
 *No comment...*
