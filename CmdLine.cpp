@@ -33,26 +33,63 @@
 
 using namespace cors::cmdline;
 
+// Command argument ---
+
+CmdArgument::CmdArgument(  const char* value ) : value( value ) {}
+
+CmdArgument::operator CmdArgument::ASCII_TYPE( void )
+{
+	return value;
+}
+
+CmdArgument::operator int( void )
+{
+	return value!=NULL ? atoi(value) : 0;
+}
+
+CmdArgument::operator float( void )
+{
+	return value!=NULL ? atof(value) : 0.;
+}
+
+CmdArgument::operator bool( void )
+{
+	return value!=NULL;
+}
+
 // Command Param ---
 
 CmdParam::CmdParam( const char* value, const CmdInfo* info )
-	: value( value ), info( info ) {}
+	: CmdArgument( value ), info( info ) {}
 
-CmdParam::operator CmdParam::ASCII_TYPE( void ) {
-	return info && info->type==CmdInfo::TYPE_FLAG
-			? "Y" : ( value>(const char*)0 ? value : "" );
+CmdParam::operator CmdArgument::ASCII_TYPE( void )
+{
+	if( info && info->flags&CmdInfo::FLAG_ARGUMENT ) {
+		if( value!=NULL && value[0]!='\0' )
+			return value;
+		return info->default_value!=NULL ? info->default_value : "";
+	}
+	return info ? "Y" : value;
 }
 
 CmdParam::operator int( void )
 {
-	return info && info->type==CmdInfo::TYPE_FLAG
-			? 1 : ( value>(const char*)0 ? atoi(value) : 0 );
+	if( info && info->flags&CmdInfo::FLAG_ARGUMENT ) {
+		if( value!=NULL && value[0]!='\0' )
+			return atoi(value);
+		return info->default_value!=NULL ? atoi(info->default_value) : 0;
+	}
+	return info ? 1 : 0;
 }
 
 CmdParam::operator float( void )
 {
-	return info && info->type==CmdInfo::TYPE_FLAG
-			? 1. : ( value>(const char*)0 ? atof(value) : 0. );
+	if( info && info->flags&CmdInfo::FLAG_ARGUMENT ) {
+		if( value!=NULL && value[0]!='\0' )
+			return atof(value);
+		return info->default_value!=NULL ? atof(info->default_value) : 0.;
+	}
+	return info ? 1. : 0.;
 }
 
 CmdParam::operator bool( void )
@@ -102,7 +139,7 @@ bool CmdLine::has_param( const char* name )
 			info = get_command(_argv[subindex]);
 			if( !info ) continue;
 
-			if( info->type != CmdInfo::TYPE_FLAG )
+			if( info->flags&CmdInfo::FLAG_ARGUMENT )
 				subindex++;
 
 			if( !info->short_name || strcmp(info->short_name,name)!=0 )
@@ -122,7 +159,7 @@ CmdParam CmdLine::get_param( const char* name )
 			info = get_command(_argv[subindex]);
 			if( !info ) continue;
 
-			if( info->type != CmdInfo::TYPE_FLAG )
+			if( info->flags&CmdInfo::FLAG_ARGUMENT )
 				subindex++;
 
 			if( !info->short_name || strcmp(info->short_name,name)!=0 )
@@ -131,7 +168,7 @@ CmdParam CmdLine::get_param( const char* name )
 			return CmdParam( _argv[subindex], info );
 		}
 	}
-	return CmdParam(NULL,NULL);
+	return CmdParam(NULL,get_command(name));
 }
 
 CmdParam CmdLine::get_param( int index )
@@ -142,7 +179,7 @@ CmdParam CmdLine::get_param( int index )
 			info = get_command(_argv[subindex]);
 			if( !info ) continue;
 
-			if( info->type != CmdInfo::TYPE_FLAG )
+			if( info->flags&CmdInfo::FLAG_ARGUMENT )
 				subindex++;
 
 			if( --index<0 )
@@ -152,7 +189,7 @@ CmdParam CmdLine::get_param( int index )
 	return CmdParam(NULL,NULL);
 }
 
-int CmdLine::count( void )
+int CmdLine::get_param_count( void )
 {
 	int icount 	= 0;
 
@@ -168,11 +205,47 @@ int CmdLine::count( void )
 				info = get_command(_argv[subindex]);
 				if( !info ) continue;
 				
-				if( info->type == CmdInfo::TYPE_FLAG )
-					icount++;
+				if( info->flags&CmdInfo::FLAG_ARGUMENT )
+					b = true;
 				else
-					b	= true;
+					icount++;
 			}
+		}
+	}
+	return icount;
+}
+
+CmdArgument CmdLine::get_argument( int index )
+{
+	if( _argc>1 && _commands ) {
+		CmdInfo* info 	= NULL;
+		for( int subindex = 1 ; subindex<_argc ; subindex++ ) {
+			info = get_command(_argv[subindex]);
+			if( !info ) {
+				if( --index<0 )
+					return CmdArgument( _argv[subindex] );
+				continue;
+			}
+
+			if( info->flags&CmdInfo::FLAG_ARGUMENT )
+				subindex++;
+		}
+	}
+	return CmdArgument(NULL);
+}
+
+int CmdLine::get_argument_count( void )
+{
+	int icount 	= 0;
+
+	if( _argc>1 && _commands ) {
+		CmdInfo* info 	= NULL;
+		for( int subindex = 1 ; subindex<_argc ; subindex++ ) {
+			info = get_command(_argv[subindex]);
+			if( !info ) { icount++; continue; }
+			
+			if( info->flags&CmdInfo::FLAG_ARGUMENT )
+				subindex++;
 		}
 	}
 	return icount;
@@ -190,5 +263,5 @@ CmdParam CmdLine::operator[]( int index )
 
 CmdLine::operator int( void )
 {
-	return count();
+	return get_param_count();
 }

@@ -35,29 +35,44 @@ namespace cors
 		struct CmdInfo
 		{
 			enum {
-				TYPE_FLAG	= 0,
-				TYPE_PARAM,
+				FLAG_NULL		= 0,
+				FLAG_ARGUMENT	= 0x01,
 			};
 			
 			int			code;
-			char		type;
+			char		flags;
 			const char*	short_name;
 			const char*	name;
+			const char* default_value;
 			const char*	description;
 		};
 
-		class CmdParam
+		class CmdArgument
 		{
 			public:
 				typedef const char*		ASCII_TYPE;
-				typedef const CmdInfo*	CmdInfoPtr;
 
 				const char* 	value;
+				
+			public:
+				CmdArgument( const char* value );
+				
+				operator ASCII_TYPE( void );
+				operator int( void );
+				operator float( void );
+				operator bool( void );
+		};
+
+		class CmdParam : public CmdArgument
+		{
+			public:
+				typedef const CmdInfo*	CmdInfoPtr;
+
 				const CmdInfo*  info;
 				
 			public:
 				CmdParam( const char* value, const CmdInfo* info );
-				
+
 				operator ASCII_TYPE( void );
 				operator int( void );
 				operator float( void );
@@ -81,7 +96,10 @@ namespace cors
 				bool has_param( const char* name );
 				CmdParam get_param( const char* name );
 				CmdParam get_param( int index );
-				int count( void );
+				int get_param_count( void );
+
+				CmdArgument get_argument( int index );
+				int get_argument_count( void );
 				
 				CmdParam operator[]( const char* name );
 				CmdParam operator[]( int index );

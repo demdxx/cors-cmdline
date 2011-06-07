@@ -33,11 +33,14 @@ using cors::cmdline::CmdInfo;
 using cors::cmdline::CmdLine;
 using cors::cmdline::CmdParam;
 
+// Example:
+// ./proc -c "http://depositfiles.com/file/d2sF3gd" -s 12 --file "movi.avi"
+
 static CmdInfo commands[] = {
-	{ 1, 	CmdInfo::TYPE_FLAG,		"-h",	"--help",		"Show help information" 	},
-	{ 2,	CmdInfo::TYPE_FLAG,		"-c",	"--continue",	"Continue downloading"		},
-	{ 3,	CmdInfo::TYPE_PARAM,	"-f",	"--file",		"Downloading file or url"	},
-	{ 4,	CmdInfo::TYPE_PARAM,	"-s",	"--segments",	"Segments count"			},
+	{ 1, 	CmdInfo::FLAG_NULL,		"-h",	"--help",		NULL,	"Show help information" 	},
+	{ 2,	CmdInfo::FLAG_NULL,		"-c",	"--continue",	NULL,	"Continue downloading"		},
+	{ 3,	CmdInfo::FLAG_ARGUMENT,	"-f",	"--file",		NULL,	"Save to file"				},
+	{ 4,	CmdInfo::FLAG_ARGUMENT,	"-s",	"--segments",	"5",	"Segments count"			},
 	{ 0 },
 };
 
@@ -58,6 +61,10 @@ int main (int argc, char *argv[])
 						<< "\t\t" << commands[i].description << std::endl;
 		}
 		
+		std::cout	<< std::endl << "Example:" << std::endl
+					<< "./proc -c \"http://depositfiles.com/file/d2sF3gd\" -s 12 --file \"movi.avi\""
+					<< std::endl << std::endl;
+		
 	}
 	else {
 
@@ -72,14 +79,20 @@ int main (int argc, char *argv[])
 					  << " int:" << (int)cmd[i] << " float:" << (float)cmd[i] << std::endl;
 		}
 		
-		const char* file = cmd["-f"];
-		bool is_continue = cmd["-c"];
-		int segments_cnt = cmd["-s"];
+		const char* file 		= cmd["-f"];
+		bool is_continue 		= cmd["-c"];
+		int segments_cnt 		= cmd["-s"];
 		
-		std::cout	<< std::endl << (is_continue?"Continue load: \"":"") << file << "\""
-					<< (segments_cnt>0 ? " segments: " : "" ) << segments_cnt << std::endl << std::endl;
-	
+		const char* input_file	= cmd.get_argument(0);
+		
+		if( input_file )
+			std::cout	<< std::endl << (is_continue?"Continue load: \"":"Load:") << input_file << "\""
+						<< (segments_cnt>0 ? " segments: " : "" ) << segments_cnt
+						<< (file ? " >> " : "" ) << file << std::endl << std::endl;
+		else
+			std::cout	<< std::endl << "Try --help" << std::endl << std::endl;
 	}
 	
 	return 0;
 }
+
