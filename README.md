@@ -12,6 +12,7 @@ Simple C++ cmdline parser
 
 **test.cpp**
 
+```cpp
 	#include <iostream>
 	#include "CmdLine.h"
 	
@@ -81,3 +82,5 @@ Simple C++ cmdline parser
 		
 		return 0;
 	}
+	
+```
